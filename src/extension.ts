@@ -2,8 +2,6 @@ import * as vscode from 'vscode';
 import ollama from 'ollama';
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log('Congratulations, your extension "seekr" is now active!');
-
 	const disposable = vscode.commands.registerCommand('seekr.start', () => {
 		const panel = vscode.window.createWebviewPanel(
 			'seekr',
@@ -15,14 +13,13 @@ export function activate(context: vscode.ExtensionContext) {
 		panel.webview.html = getWebviewContent();
 
 		panel.webview.onDidReceiveMessage(async (message: any) => {
-			console.log(message);
 			if (message.command === 'chat') {
 				const userPrompt = message.text;
 				let responseText = '';
 
 				try {
 					const streamResponse = await ollama.chat({
-						model: 'deepseek-r1:latest',
+						model: 'deepseek-r1:1.5b',
 						messages: [{ role: 'user', content: userPrompt }],
 						stream: true
 					});
@@ -32,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 						panel.webview.postMessage({ command: 'chatResponse', text: responseText });
 					}
 				} catch (error) {
-
+					console.error(error);
 				}
 			}
 
