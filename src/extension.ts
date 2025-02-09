@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import ollama from 'ollama';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "seekr" is now active!');
@@ -9,9 +10,27 @@ export function activate(context: vscode.ExtensionContext) {
 			'Seekr Chat',
 			vscode.ViewColumn.One,
 			{ enableScripts: true }
-		)
+		);
 
 		panel.webview.html = getWebviewContent();
+
+		panel.webview.onDidReceiveMessage(async (message: any) => {
+			if (message.command === 'chat') {
+				const userPrompt = message.text;
+				let response = '';
+
+				try {
+					const streamResponse = await ollama.chat({
+						model: 'deepseek-r1:latest',
+						messages: [{ role: 'user', content: userPrompt }],
+						stream: true
+					});
+				} catch (error) {
+					
+				}
+			}
+		
+		});
 
 		vscode.window.showInformationMessage('Seekr!');
 	});
@@ -37,6 +56,14 @@ function getWebviewContent() {
 		<textarea id="prompt" placeholder="Ask me a question..,"></textarea>
 		<button id="askBtn">Ask</button>
 		<div id="response"></div>
+		<script>
+			const vscode = acquireVsCodeApi();
+
+			document.getElementById('askBtn').addEventListener('click', () => {
+				const text = document.getElementById('prompt').value;
+				vscode.postMessage({ command: 'chat', text });
+			});
+		</script>
 	</body>
 	</html>
 	`;
