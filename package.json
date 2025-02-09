@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "seekr.helloWorld",
-        "title": "Hello World"
+        "command": "seekr.start",
+        "title": "start seekr"
       }
     ]
   },
