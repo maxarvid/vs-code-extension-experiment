@@ -15,9 +15,10 @@ export function activate(context: vscode.ExtensionContext) {
 		panel.webview.html = getWebviewContent();
 
 		panel.webview.onDidReceiveMessage(async (message: any) => {
+			console.log(message);
 			if (message.command === 'chat') {
 				const userPrompt = message.text;
-				let response = '';
+				let responseText = '';
 
 				try {
 					const streamResponse = await ollama.chat({
@@ -25,11 +26,16 @@ export function activate(context: vscode.ExtensionContext) {
 						messages: [{ role: 'user', content: userPrompt }],
 						stream: true
 					});
+
+					for await (const part of streamResponse) {
+						responseText += part.message.content;
+						panel.webview.postMessage({ command: 'chatResponse', text: responseText });
+					}
 				} catch (error) {
-					
+
 				}
 			}
-		
+
 		});
 
 		vscode.window.showInformationMessage('Seekr!');
@@ -39,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 function getWebviewContent() {
-	return `
+	return /*html*/`
 	<!DOCTYPE html>
 	<html lang="en">
 	<head>
@@ -52,7 +58,6 @@ function getWebviewContent() {
 	</head>
 	<body>
 		<h2>Seekr Chat</h2>
-		<p>Welcome to Seekr Chat</p>
 		<textarea id="prompt" placeholder="Ask me a question..,"></textarea>
 		<button id="askBtn">Ask</button>
 		<div id="response"></div>
@@ -63,6 +68,13 @@ function getWebviewContent() {
 				const text = document.getElementById('prompt').value;
 				vscode.postMessage({ command: 'chat', text });
 			});
+
+			window.addEventListener('message', event => {
+				const { command, text} = event.data;
+				if (command === 'chatResponse') {
+					document.getElementById('response').innerText = text;
+				}
+			});
 		</script>
 	</body>
 	</html>
@@ -70,4 +82,4 @@ function getWebviewContent() {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
